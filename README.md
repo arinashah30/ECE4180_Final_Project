@@ -23,6 +23,14 @@ Our project is a box designed to protect crops and plants from being eaten or de
 3. Place lid on planter in closed position.
 4. Press the blue button on mbed to run the program.
 
+**Software**
+Libraries Used:
+- 4DGL-uLCD-SE: http://os.mbed.com/users/4180_1/code/4DGL-uLCD-SE/
+- HC_SR04_Ultrasonic_Library: http://developer.mbed.org/users/ejteb/code/HC_SR04_Ultrasonic_Library/
+- Motordriver: http://os.mbed.com/users/littlexc/code/Motordriver/
+- mbed RTOS: http://os.mbed.com/users/mbed_official/code/mbed-rtos/
+- MPR121 touch keypad: import the mpr121.cpp and mpr121.h files in the repo to your project
+
 **Schematic**
 
 **Demo**
