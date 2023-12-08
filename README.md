@@ -52,7 +52,8 @@ Libraries Used:
 
 **Schematic**
 
-<img width="623" alt="Screenshot 2023-12-07 at 4 20 43 PM" src="https://github.com/arinashah30/ECE4180_Final_Project/assets/101674938/a44d3694-1979-442f-9ab8-88a9ce8651d2">
+<img width="526" alt="Screenshot 2023-12-07 at 4 56 42 PM" src="https://github.com/arinashah30/ECE4180_Final_Project/assets/101674938/d64cb50c-0daa-49c2-9d86-c3782d6b328c">
+
 
 **Demo**
 
