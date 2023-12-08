@@ -25,7 +25,7 @@ DigitalOut led1(LED1);
 DigitalOut led2(LED2);
 DigitalOut led3(LED3);
 DigitalOut led4(LED4);
-//DigitalOut Ctrl(p8); //Solenoid output control bit
+
 PwmOut red(p23);//"R" pin
 PwmOut blue(p25);//"G" pin
 PwmOut green(p24);//"B" pin
@@ -52,6 +52,8 @@ int currentIndex = 0;
 int numberBuffer = -1;
 int passcodeFlag = -1;
 int overrideMode = 0;
+int openBuffer = 0;
+int sonarBuffer[] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
 
 Motor A(p22, p6, p5, 1); // pwm, fwd, rev, can brake
 Motor B(p21, p7, p8, 1); // pwm, fwd, rev, can brake
@@ -67,19 +69,39 @@ void dist(int distance)
 {
     //put code here to execute when the distance has changed
     pc.printf("Distance %d mm\r\n", distance);
+    int sum = 0;
+    int count = 0;
+    for (int i = 0; i < 9; i++) {
+        int val = sonarBuffer[i];
+        sonarBuffer[i] = sonarBuffer[i+1];
+        if (val > 10) {
+            sum += val;
+            count++;
+        }
+    }
+    sonarBuffer[9] = distance;
+    if (distance > 10) {
+        sum += distance;
+        count++;
+    }
+    int averageDistance = sum/count;
 
-    if (distance < 200 && !closed) {
+    if (averageDistance < 200 && !closed) {
+        for (int i = 0; i < 10; i++) {
+            sonarBuffer[i] = 10;
+        }
         closeLid(); //switch order after finding way to stop mid open/close
         closed = 1;
-    } else if (distance > 200 && closed) {
+    } else if (averageDistance > 200 && closed) {
+        for (int i = 0; i < 10; i++) {
+            sonarBuffer[i] = 1000;
+        }
         openLid();
         closed = 0;
     }
 }
 
-ultrasonic mu(p12, p13, .1, 1, &dist);    //Set the trigger pin to p6 and the echo pin to p7
-                                        //have updates every .1 seconds and a timeout after 1
-                                        //second, and call dist when the distance changes
+ultrasonic mu(p12, p13, .1, 1, &dist);
 
 
 
@@ -89,14 +111,10 @@ void fallInterrupt() {
   int i=0;
   int value=mpr121.read(0x00);
   value +=mpr121.read(0x01)<<8;
-  //pc.printf("Inside touchpad interrupt \n");
-  // LED demo mod
   i=0;
-  // puts key number out to LEDs for demo
   for (i=0; i<12; i++) {
   if (((value>>i)&0x01)==1) key_code=i;
   }
-  //pc.printf("KEYCODE: %d \n", key_code);
   if (key_code > 9) {
       switch (key_code) {
           case 10: //clear entire passcode typed
@@ -118,7 +136,7 @@ void fallInterrupt() {
                 passcodeFlag = 0;
                 closetimer.start();
                 overrideMode = 1;
-                openLid();
+                openBuffer = 1;
             } else {
                 passcodeFlag = 1;
             }
@@ -127,25 +145,6 @@ void fallInterrupt() {
                 passcode[i] = NULL;
             }
             currentIndex = 0;
-            // if (strcmp(passcode, correctPasscode) == 0) { // check if passcode is equal
-            //     closed = 0; //unlocked
-            //     openLid();
-            //     // lcd_mutex.lock();
-            //     // LCD.locate(1, 3);
-            //     // LCD.color(GREEN);
-            //     // LCD.printf("CORRECT");
-            //     // lcd_mutex.unlock();
-            //     currentIndex = 0; //reset passcode
-            //     for (int j = 0; j < 4; j++) {
-            //         passcode[j] = NULL;
-            //     }
-            // } else {
-            //     // lcd_mutex.lock();
-            //     // LCD.locate(1, 3);
-            //     // LCD.color(RED);
-            //     // LCD.printf("INCORRECT");
-            //     // lcd_mutex.unlock();
-            // }
             break;
           default:
             break;
@@ -155,21 +154,12 @@ void fallInterrupt() {
           passcode[currentIndex] = key_code;
           currentIndex++;
       }
-      
-      
-
-    //   lcd_mutex.lock();
-    //   LCD.locate(1 + currentIndex, 5);
-    //   LCD.color(WHITE);
-    //   LCD.printf("%c", passcode[currentIndex]);
-    //   lcd_mutex.unlock();
   }
 }
 
 
 
 void lockDoor() {
-    //pc.printf("Inside lock door \n");
     LOCK.lock();
     lock = 0;
     LOCK.unlock();
@@ -177,7 +167,6 @@ void lockDoor() {
 
 
 void unlockDoor() {
-    //pc.printf("Inside unlock door \n");
     LOCK.lock();
     lock = 1;
     LOCK.unlock();
@@ -185,39 +174,42 @@ void unlockDoor() {
 
 
 void openLid() {
-    //pc.printf("Inside open lid \n");
     unlockDoor();
-    for (float s = 0.0; s < 1.0; s += 0.01) {
+    for (float s = 0.0; s < 0.5; s += 0.01) {
         A.speed(s);
+        B.speed(s);
         Thread::wait(20);
     }
     Thread::wait(500);
     A.stop(0.9);
+    B.stop(0.9);
     lockDoor();
     Thread::wait(500);
     A.coast();
+    B.coast();
 }
 
 
 void closeLid() {
-    //pc.printf("Inside close lid \n");
     unlockDoor();
-    for (float s = 0.0; s > -1.0; s -= 0.01) {
+    for (float s = 0.0; s > -0.5; s -= 0.01) {
         A.speed(s);
+        B.speed(s);
         Thread::wait(20);
     }
     Thread::wait(500);
     A.stop(0.9);
+    B.stop(0.9);
     lockDoor();
     Thread::wait(500);
     A.coast();
+    B.coast();
 }
 
 
 void thread1(void const *args)
 {
     while(true) {       // thread loop
-    //pc.printf("Inside thread 1 \n");
         lcd_mutex.lock();
         LCD.color(WHITE);
         for (int i = 0; i < 4; i++) {
@@ -246,7 +238,6 @@ void thread1(void const *args)
 void thread2(void const *args)
 {
     while(true) {       // thread loop
-    //pc.printf("Inside thread 2 \n");
         if (closetimer.read() >= 10) { // if timer is more than ten seconds, open box again
             closetimer.stop();
             closetimer.reset();
@@ -257,8 +248,6 @@ void thread2(void const *args)
 }
 
 int main() {
-  //led1 = 1;
-  pc.printf("Start of main");
   
   interrupt.fall(&fallInterrupt);
   interrupt.mode(PullUp);
@@ -270,19 +259,24 @@ int main() {
   LCD.printf("ENTER PASSCODE\n");
   mu.startUpdates();
   closed = false;
-  //openLid();
+  openLid();
   pc.printf("Beg of main \n", closed);
 
 
   Thread t1(thread1); //start thread1
-  Thread t2(thread2);
+  Thread t2(thread2);// start thread2
 
   while (1) {
-      //pc.printf("Closed: %d \n", closed);
       if (overrideMode) {
           closed = false;
+          if (openBuffer) {
+              openBuffer = 0;
+              openLid();
+          }
+          
       } else {
         mu.checkDistance();
+        openBuffer = 0;
       }
       if (closed) {
         red = 1;
@@ -292,17 +286,11 @@ int main() {
         green = 1;
       }
 
-      if (cleartimer.read() >= 2) { // if timer is more than ten seconds, lock box again
+      if (cleartimer.read() >= 2) { // if timer is more than two seconds, lock box again
           cleartimer.stop();
           cleartimer.reset();
           passcodeFlag = -1;
       }
-
-      for (int i = 0; i < 4; i++) {
-          pc.printf("PASSCODE %d: %d \n", i, passcode[i]);
-          pc.printf("CORRECT PASSCODE %d: %d \n", i, correctPasscode[i]);
-      }
-
       Thread::wait(100);
   }
 }
