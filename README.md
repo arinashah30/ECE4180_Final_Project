@@ -17,7 +17,7 @@ Parts List:
 
 Our project is a planter designed to protect crops and plants from being eaten or destroyed by wild animals. The planter box uses Sonar to detect when a person, animal, or object gets too close to it. When it detects something is nearby, it closes by using the motor to shut the sliding lid and then activating the solenoid to use as a lock. If a user wants to open the box, they can type in the passcode on the touch keypad. If the passcode is correct, the box will open by unlocking the solenoid and using the motor to open the sliding lid. The box will then close again automatically after ten seconds.
 
-![4180FinalProject drawio](https://github.com/arinashah30/ECE4180_Final_Project/assets/101674938/ae3171d1-f313-4fa1-b262-4ceb5c13e1a9)
+![4180FinalProject drawio (1)](https://github.com/arinashah30/ECE4180_Final_Project/assets/101674938/4457f872-9a46-4f8a-b496-00fa9ad4b117)
 ![IMG_7611](https://github.com/arinashah30/ECE4180_Final_Project/assets/101674938/0d07a770-15a0-48f0-bb6c-28af0a078d63)
 ![IMG_7613](https://github.com/arinashah30/ECE4180_Final_Project/assets/101674938/0f29ae3b-5d51-45d8-a0cf-73675615ddab)
 ![IMG_7615](https://github.com/arinashah30/ECE4180_Final_Project/assets/101674938/d228f55f-193e-4c3c-a4c3-3353f31ea48d)
